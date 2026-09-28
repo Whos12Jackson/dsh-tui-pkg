@@ -4,44 +4,46 @@
 [![dshfind](https://dshfind.com/api/badge/Whos12Jackson/dsh-tui-pkg)](https://dshfind.com/zh/plugins/Whos12Jackson/dsh-tui-pkg)
 [![license](https://img.shields.io/npm/l/dsh-tui-pkg)](https://github.com/Whos12Jackson/dsh-tui-pkg/blob/main/LICENSE)
 
-**在 dsh-tui 里管理插件 —— 不用离开终端。** · [English](./README.en.md)
+**在 dsh-tui 里管理插件 —— 一个命令。** · [English](./README.en.md)
 
-浏览 profile 与 dsh 安装提供的全部 bundle，然后安装、卸载、启用、停用。
+## 核心：`/pkg`
 
-```text
-/pkg                     # 打开全屏面板（清单表格 + 鼠标勾选 + 安装输入）
-/pkg list                # 文本清单一行：12 项 · ● dsh-base dsh-tui … · 8 项未启用可用
-/pkg <名字>               # 单个详情一行：状态、行数、来源、可否卸载 + 下一句命令
-/pkg <包名>@<版本>         # 安装（也吃 路径 / tarball / github:user/repo）
-/pkg remove <名字>        # 卸载（别名 rm / un / del / uninstall）
-/pkg on  <名字>           # 启用这一层（别名 enable）
-/pkg off <名字>           # 停用这一层，依赖保留（别名 disable）
-/pkg web                  # web 面板开没开、怎么开
-/pkg help                # 一行用法
-```
-
-### 面板按键
+在 TUI 里敲一个命令，打开全屏管理面板 —— 浏览、安装、卸载、启用、停用全在这里：
 
 ```text
-回车 = 切换选中行的启用/停用        ↑↓ 选择行 · d 卸载选中行
-i 聚焦底部安装输入（回车安装）      r 刷新 · f 切换显示（仅已安装 ⇄ 全部）· Esc 退出面板
-（☑/☐ 上的鼠标点击同样有效，但部分终端不报鼠标，键盘路径才是主路径）
+/pkg
 ```
-
-默认只显示**已安装**的 bundle（`f` 键切到"全部"才会看到 dsh 自带的 web/headless/acp/sdk 等表面开关）。
-
-面板里的操作结果（切换/卸载/安装）通过 `channel.pushLocal` 写进**会话记录**，不再像通知条那样一闪而过。
-
-判定规则（文本命令）：**第一个词不是已知子命令时** —— 命中已装的 bundle 名就返回它的详情行，否则整串当安装规格：
 
 ```text
-/pkg dsh-tui-find            → 详情（已装）
-/pkg dsh-tui-theme@0.7.2     → 安装
-/pkg dsh-tui-theme           → 未装 → 装最新版
-/pkg some-new-plugin         → 装它
+插件与 bundle（3/12，仅已安装） 回车=启停 · ↑↓ 选择 · d 卸载 · i 安装 · r 刷新 · f 过滤 · Esc 退出
+☑ dsh-tui 0.11.1        ｜ 启用 · 1行 · 依赖 · 只读
+☑ dsh-tui-find 0.4.4    ｜ 启用 · 1行 · 依赖 · 可卸
+☑ dsh-tui-pkg 0.3.3     ｜ 启用 · 1行 · 依赖 · 可卸
+安装: （i 聚焦输入，回车安装，Esc 退出面板）
 ```
 
-`show` / `install` / `add` / `info` 仍被识别（老习惯不会变成"去找一个叫 show 的包"），但**只推荐上面这套写法**。
+| 键 | 作用 |
+|---|---|
+| **回车** | 切换选中行的启用 ⇄ 停用（☑ 上点鼠标也可以，但部分终端不报鼠标） |
+| `↑↓` / `d` / `i` | 选行 / 卸载选中行 / 聚焦底部安装输入（回车安装） |
+| `r` / `f` / `Esc` | 刷新 / 切换显示（仅已安装 ⇄ 全部）/ 退出 |
+
+默认只显示**已安装**的 bundle；按 `f` 才看到 dsh 自带的 web/headless/acp/sdk 表面开关。面板里的操作结果会写进**会话记录**（`pushLocal`），不会像通知条那样一闪而过。
+
+## 其他命令（简要）
+
+不想开面板时，文本命令也是一行直达：
+
+| 命令 | 作用 |
+|---|---|
+| `/pkg list` | 一行清单 |
+| `/pkg <名字>` | 一行详情（状态/行数/来源/可否卸载） |
+| `/pkg <包名>@<版本>` | 直接安装（路径 / tarball / git 也行） |
+| `/pkg remove\|on\|off <名字>` | 卸载 / 启用 / 停用 |
+| `/pkg web` | web 面板状态与开启方式 |
+
+判定规则：第一个词不是已知子命令时，命中已装名字就当详情，否则整串当安装规格（所以 `/pkg dsh-tui-theme@0.7.2` 一键安装）。`show` / `install` 等旧写法仍被识别，仅作兼容。
+
 
 ## 安装与卸载
 

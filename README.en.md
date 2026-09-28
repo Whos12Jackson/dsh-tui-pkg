@@ -4,40 +4,46 @@
 [![dshfind](https://dshfind.com/api/badge/Whos12Jackson/dsh-tui-pkg)](https://dshfind.com/en/plugins/Whos12Jackson/dsh-tui-pkg)
 [![license](https://img.shields.io/npm/l/dsh-tui-pkg)](https://github.com/Whos12Jackson/dsh-tui-pkg/blob/main/LICENSE)
 
-**Manage dsh-tui plugins without leaving the terminal.** · [中文](./README.md)
+**Manage dsh-tui plugins with one command.** · [中文](./README.md)
 
-Browse every bundle your profile and the dsh installation offer, then install, remove, enable or disable one — from a full-screen panel with checkboxes, or with one-line text commands.
+## The core: `/pkg`
 
-## Install
-
-```sh
-dsh plugin --profile dsh-tui add -w dsh-tui-pkg@latest
-```
-
-Requires dsh-tui ≥ 0.9 (tested on 0.11.1) and Node `^22.19 || >=24`. **Restart the TUI afterwards** — `/reload` does not reload plugin code.
-
-## Usage
+One command opens a full-screen panel that does everything — browse, install, remove, enable, disable:
 
 ```text
-/pkg                     # open the full-screen panel
-/pkg list                # one-line inventory: 12 items · ● dsh-base dsh-tui … · 8 off
-/pkg <name>              # one-line detail: state · rows · source · removable + the next command
-/pkg <name>@<version>    # install (also accepts paths, tarballs, github:user/repo)
-/pkg remove <name>       # remove (aliases rm / un / del / uninstall)
-/pkg on  <name>          # enable a bundle layer (alias enable)
-/pkg off <name>          # disable a bundle layer, dependency kept (alias disable)
-/pkg web                 # whether the browser surface is enabled and how to enable it
-/pkg help                # one-line usage
+/pkg
 ```
-
-### Panel keys
 
 ```text
-Enter = toggle the selected row's enablement     ↑↓ move · d remove selected
-i focus install input (Enter installs)           r refresh · f filter (installed ⇄ all) · Esc close
+bundles (3/12, installed only) Enter=toggle · ↑↓ move · d remove · i install · r refresh · f filter · Esc close
+☑ dsh-tui 0.11.1        | on · 1 row · dep · read-only
+☑ dsh-tui-find 0.4.4    | on · 1 row · dep · removable
+☑ dsh-tui-pkg 0.3.3     | on · 1 row · dep · removable
+install: (i to focus, Enter installs, Esc closes)
 ```
 
-The panel shows installed bundles only by default; press `f` to see everything the dsh installation ships (web / headless / acp / sdk surfaces). Panel results are written into the session transcript via `channel.pushLocal`, so they stay on screen instead of fading like notifications.
+| Key | Action |
+|---|---|
+| **Enter** | toggle the selected row's enablement (clicking ☑ works too, but some terminals never report the mouse) |
+| `↑↓` / `d` / `i` | move / remove selected / focus the install input (Enter installs) |
+| `r` / `f` / `Esc` | refresh / toggle view (installed ⇄ all) / close |
+
+Only installed bundles show by default; `f` reveals the dsh-installation surfaces (web / headless / acp / sdk). Panel results are written into the session transcript via `channel.pushLocal` — they stay on screen instead of fading like notifications.
+
+## Other commands (briefly)
+
+For one-shot use without the panel:
+
+| Command | What it does |
+|---|---|
+| `/pkg list` | one-line inventory |
+| `/pkg <name>` | one-line detail (state / rows / source / removable) |
+| `/pkg <name>@<version>` | install directly (paths, tarballs, git too) |
+| `/pkg remove\|on\|off <name>` | remove / enable / disable |
+| `/pkg web` | whether the browser surface is on and how to turn it on |
+
+Any first token that is not a known subcommand resolves against the inventory first (an installed name answers with its detail line), otherwise the whole input is an install spec — so `/pkg dsh-tui-theme@0.7.2` installs in one step. `show` / `install` aliases are still recognized for compatibility.
+
 
 ## Design notes (why it looks like this)
 
