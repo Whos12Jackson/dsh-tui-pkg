@@ -1,6 +1,10 @@
 # dsh-tui-pkg
 
-**在 dsh-tui 里管理插件 —— 不用离开终端。**
+[![npm version](https://img.shields.io/npm/v/dsh-tui-pkg)](https://www.npmjs.com/package/dsh-tui-pkg)
+[![dshfind](https://dshfind.com/api/badge/Whos12Jackson/dsh-tui-pkg)](https://dshfind.com/zh/plugins/Whos12Jackson/dsh-tui-pkg)
+[![license](https://img.shields.io/npm/l/dsh-tui-pkg)](https://github.com/Whos12Jackson/dsh-tui-pkg/blob/main/LICENSE)
+
+**在 dsh-tui 里管理插件 —— 不用离开终端。** · [English](./README.en.md)
 
 浏览 profile 与 dsh 安装提供的全部 bundle，然后安装、卸载、启用、停用。
 
