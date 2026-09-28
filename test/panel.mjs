@@ -7,10 +7,11 @@
  */
 
 import assert from 'node:assert/strict'
-import { overrideGithubSearch, panelComponent } from '../lib/index.js'
+import { checkUpdates, overrideGithubSearch, overrideUpdatesFetcher, panelComponent } from '../lib/index.js'
 
-// Keep the panel tests offline: the GitHub fallback must not hit the network.
+// Keep the panel tests offline: neither seam may hit the network.
 overrideGithubSearch(async () => [])
+overrideUpdatesFetcher(async () => undefined)
 
 // ── fake manager: a mutable inventory + recorded calls ────────────────────
 
@@ -62,6 +63,7 @@ function mount(manager) {
   const renders = []
   let component
   let inputHandler
+  let lastTree = null
   const pushed = []
   const slots = []
   let slotIndex = 0
@@ -103,9 +105,13 @@ function mount(manager) {
   function draw() {
     slotIndex = 0
     effectIndex = 0
-    return component({ React, ui, channel, close() {} })
+    lastTree = component({ React, ui, channel, close() {} })
+    return lastTree
   }
   return {
+    get tree() {
+      return lastTree
+    },
     mount(fn) {
       component = fn
       draw()
@@ -136,6 +142,25 @@ function mount(manager) {
 }
 
 // ── the scenarios ─────────────────────────────────────────────────────────
+
+// 0. New-version hints: an installed bundle with a newer registry version
+//    shows an ⬆新版 marker on its row. Runs first so the update cache is
+//    still cold (later scenarios' refreshes would otherwise shadow it).
+{
+  overrideUpdatesFetcher(async (packageName) => (packageName === 'dsh-tui-find' ? '9.9.9' : undefined))
+  const m = fakeManager()
+  // Warm the update cache first so the panel's own refresh resolves it
+  // without racing the harness's microtask model.
+  await checkUpdates(await m.listBundles())
+  const h = mount(m)
+  h.mount(panelComponent(undefined, () => m))
+  await h.settle()
+  h.fire('r', h.key())
+  await h.settle()
+  const text = JSON.stringify(h.tree)
+  assert.ok(text.includes('⬆新版 9.9.9'), 'the find row carries the newer-version marker')
+  overrideUpdatesFetcher(async () => undefined)
+}
 
 // 1. Initial load: the effect reads the inventory once.
 {
@@ -218,4 +243,4 @@ function mount(manager) {
   overrideGithubSearch(async () => [])
 }
 
-console.log('✓ panel ok — 5 scenarios')
+console.log('✓ panel ok — 6 scenarios')

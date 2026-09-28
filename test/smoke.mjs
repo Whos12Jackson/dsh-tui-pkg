@@ -15,12 +15,13 @@ import assert from 'node:assert/strict'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { apply, ensureInBundles, filterBundles, name, inject, overrideGithubSearch, resolveInstallSpec } from '../lib/index.js'
+import { apply, checkUpdates, ensureInBundles, filterBundles, name, inject, overrideGithubSearch, overrideUpdatesFetcher, resolveInstallSpec, semverLt } from '../lib/index.js'
 
 // Keep the whole suite offline: the GitHub fallback's network search is
 // replaced by a no-op that finds nothing (scenarios that need candidates
 // inject their own search inline).
 overrideGithubSearch(async () => [])
+overrideUpdatesFetcher(async () => undefined)
 
 
 /** The host renders a handler's text as a notification capped at 200 cells. */
@@ -506,6 +507,30 @@ const assertShort = (result) => {
   }
 }
 
+// ── new-version detection ─────────────────────────────────────────────────
+{
+  // Version comparison: numeric triples, prerelease ordering.
+  assert.equal(semverLt('0.4.1', '0.4.2'), true)
+  assert.equal(semverLt('0.4.10', '0.4.9'), false)
+  assert.equal(semverLt('1.0.0', '1.0.0'), false)
+  assert.equal(semverLt('0.1.7-rc.2', '0.1.7'), true, 'a prerelease is older than the stable release')
+  assert.equal(semverLt('0.1.7', '0.1.7-rc.2'), false)
+  assert.equal(semverLt('0.11.1', '0.2.0'), false)
+
+  // The registry seam drives the panel hints; offline-safe with the override.
+  overrideUpdatesFetcher(async (packageName) => (packageName === 'dsh-tui-find' ? '0.9.0' : undefined))
+  const hints = await checkUpdates([
+    { name: 'dsh-tui-find', version: '0.4.4', installed: true },
+    { name: 'dsh-tui-theme', version: '0.7.2', installed: true },
+    { name: '@deepseek-ai/dsh-web-app', version: '0.1.7-rc.2', installed: false },
+  ])
+  assert.equal(hints.get('dsh-tui-find'), '0.9.0')
+  assert.equal(hints.has('dsh-tui-theme'), false)
+  assert.equal(hints.has('@deepseek-ai/dsh-web-app'), false, 'installation-supplied surfaces are not flagged')
+  overrideUpdatesFetcher(async () => undefined)
+}
+
 assert.ok(toasts.length > 0, 'toasts were emitted')
 console.log(`✓ smoke ok — ${manager.calls.length} manager calls, ${toasts.length} toasts`)
+
 
