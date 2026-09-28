@@ -4,7 +4,7 @@
 [![dshfind](https://dshfind.com/api/badge/Whos12Jackson/dsh-tui-pkg)](https://dshfind.com/en/plugins/Whos12Jackson/dsh-tui-pkg)
 [![license](https://img.shields.io/npm/l/dsh-tui-pkg)](https://github.com/Whos12Jackson/dsh-tui-pkg/blob/main/LICENSE)
 
-**Manage dsh-tui plugins with one command.** · [中文](./README.md)
+**Manage [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) plugins with one command.** · [中文](./README.md)
 
 ## The core: `/pkg`
 
@@ -81,3 +81,8 @@ Records the registration route, whether the five host seams are mounted, the rea
 ## License
 
 MIT
+
+## Links
+
+- [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) — the terminal host this plugin runs in
+- [dshtui.com](https://dshtui.com) — the dsh-TUI ecosystem site

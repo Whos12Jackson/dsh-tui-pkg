@@ -4,7 +4,7 @@
 [![dshfind](https://dshfind.com/api/badge/Whos12Jackson/dsh-tui-pkg)](https://dshfind.com/zh/plugins/Whos12Jackson/dsh-tui-pkg)
 [![license](https://img.shields.io/npm/l/dsh-tui-pkg)](https://github.com/Whos12Jackson/dsh-tui-pkg/blob/main/LICENSE)
 
-**在 dsh-tui 里管理插件 —— 一个命令。** · [English](./README.en.md)
+**在 [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) 里管理插件 —— 一个命令。** · [English](./README.en.md)
 
 ## 核心：`/pkg`
 
@@ -178,3 +178,8 @@ dialog:cancelled:0ms
 ## License
 
 MIT
+
+## 相关链接
+
+- [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) — 本插件运行的终端宿主
+- [dshtui.com](https://dshtui.com) — dsh-TUI 生态官网
