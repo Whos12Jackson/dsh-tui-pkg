@@ -2,7 +2,7 @@
   "$schema": "urn:dsh-std:community-draft:dsh-plugin:0.15",
   "id": "dsh-tui-pkg",
   "name": "dsh-tui-pkg",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "manifestVersion": "0.15",
   "facets": {
     "host": {
