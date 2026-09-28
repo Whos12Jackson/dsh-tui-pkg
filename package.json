@@ -1,6 +1,6 @@
 {
   "name": "dsh-tui-pkg",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "In-terminal plugin manager for dsh-tui: list installed plugins and bundles, and install, remove, enable or disable them without leaving the TUI.",
   "keywords": [
     "dsh",
@@ -33,7 +33,9 @@
     "lib",
     "cordis.patch.yml",
     "dsh-plugin.json",
-    "README.md"
+    "README.md",
+    "ADMISSION.md",
+    "README.en.md"
   ],
   "engines": {
     "node": "^22.19 || >=24"

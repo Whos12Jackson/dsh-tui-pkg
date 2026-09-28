@@ -2,7 +2,7 @@
   "$schema": "urn:dsh-std:community-draft:dsh-plugin:0.15",
   "id": "dsh-tui-pkg",
   "name": "dsh-tui-pkg",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "manifestVersion": "0.15",
   "facets": {
     "host": {
@@ -16,13 +16,24 @@
         "apiVersion": "commands.dsh/v1alpha1",
         "kind": "Command"
       }
-    ]
+    ],
+    "node": "^22.19 || >=24"
   },
   "permissions": [
     {
       "name": "commands.invoke",
       "scope": "dsh-tui-pkg.pkg",
       "reason": "在终端里浏览、安装、卸载、启用或停用 profile 的插件与 bundle"
+    },
+    {
+      "name": "storage.local.read",
+      "scope": "dsh-tui-pkg",
+      "reason": "读取 profile 清单的 dsh.profile.bundles 与本插件自有日志目录（~/.dsh-tui/dsh-tui-pkg/）；不读取会话、凭据或任何其他文件"
+    },
+    {
+      "name": "storage.local.write",
+      "scope": "dsh-tui-pkg",
+      "reason": "写入本插件自有 boot.log 诊断日志；git 源安装成功后向 profile 清单追加 bundle 登记（与官方 reconcile 行为一致）"
     }
   ],
   "contributes": {
@@ -38,5 +49,17 @@
   "license": "MIT",
   "source": {
     "repository": "https://github.com/Whos12Jackson/dsh-tui-pkg"
+  },
+  "overrides": [
+    {
+      "target": "x-ccch1mneyyy.tui.host-services",
+      "kind": "patch",
+      "description": "驱动 Community v0.15 契约之外的 dsh 框架服务，全部为 ctx.get(name, false) 软探测、判空降级：pluginManager（listBundles/inspect/installBundle/removeBundle/setBundleEnabled，官方 pnpm 路径，失败自带回滚）、commands（/pkg 注册，mediated 不可用时直注册）、tuiScenes（全屏面板，从 activation 上下文注册并经 ctx.effect 回收）、channel.pushLocal（结果写入会话记录）。网络面：仅出站 HTTPS GET，端点只有 api.github.com（同名仓库搜索、release 版本）与 registry.npmjs.org（dist-tags 版本探测）；无入站端口、无其他域名。凭据面：不读取、不写入、不转发任何凭据（~/.dsh/credentials* 及同类存储一概不碰）。文件面：只读 profile 清单、只写自有 ~/.dsh-tui/dsh-tui-pkg/ 日志与 profile 清单的 bundles 登记。失败边界：任何操作失败均以单行根因 + 日志路径回显，不产生半安装状态（由 pluginManager 原子性保证）。"
+    }
+  ],
+  "compat": {
+    "hosts": ["dsh-tui"],
+    "node": "^22.19 || >=24",
+    "dsh-tui": ">=0.9"
   }
 }
