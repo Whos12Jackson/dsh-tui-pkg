@@ -1,0 +1,25 @@
+# dsh-tui-pkg bundle patch: mount the plugin row into the profile tree.
+#
+# `dsh plugin --profile <name> add -w dsh-tui-pkg` pnpm-installs this package
+# into the profile and appends it to dsh.profile.bundles (this package ships
+# ./cordis.patch.yml for that flow). Manual mounting: insert the row below into
+# $DSH_HOME/profiles/<name>/cordis.patch.yml.
+#
+# No `inject` on purpose. Every host service this plugin uses — the dsh
+# plugin manager, the dsh-tui plugin host, dialogs and toasts — is soft-probed
+# with `ctx.get(name, false)` and polled until mounted. A hard inject would
+# bind registrations to the injected service's fiber, so the host would reject
+# every later call from this plugin's own activation (the dsh-tui seam rule).
+#
+# ONE exception: `tuiScenes` IS declared at entry level, purely as an ordering
+# guarantee. The scene must be registered from a live activation context, and a
+# poll-timer callback does not carry one (measured: tuiScenes.register throws
+# "requires a live Cordis activation context" there). With the inject, apply()
+# runs only after the scenes row mounts, inside the loader's own activation —
+# the same context dsh-tui-find registers its scene from. tuiScenes is part of
+# the dsh-tui bundle, so it is always present in any profile this plugin
+# targets; the command registration itself still soft-probes.
+- insert:
+    - id: dsh-tui-pkg
+      name: 'dsh-tui-pkg'
+      inject: [tuiScenes]
