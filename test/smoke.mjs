@@ -459,11 +459,12 @@ const assertShort = (result) => {
   assert.equal(single.via, 'github')
   assert.equal(single.name, 'dsh-tui-feishu')
 
-  // Several candidates refuse with a list instead of guessing.
+  // Several candidates become an interactive choice list, not a guess.
   overrideGithubSearch(async () => ['a/dsh-tui-feishu', 'b/dsh-tui-feishu'])
   const multi = await resolveInstallSpec(manager, 'dsh-tui-feishu', { status: 'refused', problem: 'not-found', reason: 'not-found (registry 404)' })
-  assert.match(multi.problem, /github:a\/dsh-tui-feishu/)
-  assert.match(multi.problem, /github:b\/dsh-tui-feishu/)
+  assert.ok(Array.isArray(multi.choices), 'ambiguous names yield choices')
+  assert.deepEqual(multi.choices.map((choice) => choice.spec), ['github:a/dsh-tui-feishu', 'github:b/dsh-tui-feishu'])
+  assert.equal(multi.choices[0].name, 'dsh-tui-feishu')
 
   // Refusals that are not plain not-found stay untouched.
   overrideGithubSearch(async () => ['x/y'])

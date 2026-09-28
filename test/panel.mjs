@@ -16,6 +16,7 @@ overrideGithubSearch(async () => [])
 
 function fakeManager() {
   const calls = []
+  const refuse = new Set()
   const rows = [
     { name: 'dsh-tui-find', version: '0.4.4', enabled: true, installed: true, optional: false, removable: true, rows: [{ rowId: 'r1', moduleName: 'x' }], overrides: [] },
     { name: 'dsh-tui-theme', version: '0.7.2', enabled: false, installed: true, optional: false, removable: true, rows: [{ rowId: 'r2', moduleName: 'x' }], overrides: [] },
@@ -24,8 +25,10 @@ function fakeManager() {
   const change = (target, enabled) => ({ changed: true, application: enabled === undefined ? 'restart-required' : 'applied', stage: 'x', target, enabled })
   return {
     calls,
+    refuse,
     async inspect(spec) {
       calls.push(['inspect', spec])
+      if (refuse.has(spec.split('@')[0])) return { status: 'refused', problem: 'not-found', reason: 'not-found (registry 404)' }
       return { status: 'ok', name: spec.split('@')[0], version: '1.0.0' }
     },
     async listBundles() {
@@ -189,4 +192,30 @@ function mount(manager) {
   assert.ok(h.pushed.some(([, lines]) => lines.some((line) => /✓ 安装/u.test(line))))
 }
 
-console.log('✓ panel ok — 4 scenarios')
+// 5. Ambiguous GitHub name: the panel switches to a picker; Enter installs
+//    the highlighted candidate and nothing installs before a choice.
+{
+  overrideGithubSearch(async () => ['a/dsh-tui-feishu', 'b/dsh-tui-feishu'])
+  const m = fakeManager()
+  m.refuse.add('dsh-tui-feishu')
+  const h = mount(m)
+  h.mount(panelComponent(undefined, () => m))
+  await h.settle()
+  h.fire('i', h.key())
+  await h.settle()
+  h.fire('dsh-tui-feishu', h.key())
+  await h.settle()
+  h.fire('', h.key({ return: true }))
+  await h.settle()
+  assert.equal(m.calls.find((call) => call[0] === 'installBundle'), undefined, 'nothing installs until a repository is picked')
+  assert.ok(h.pushed.some(([, lines]) => lines.some((line) => /同名仓库/u.test(line))))
+  h.fire('', h.key({ downArrow: true }))
+  await h.settle()
+  h.fire('', h.key({ return: true }))
+  await h.settle()
+  const install = m.calls.find((call) => call[0] === 'installBundle')
+  assert.equal(install?.[1], 'github:b/dsh-tui-feishu')
+  overrideGithubSearch(async () => [])
+}
+
+console.log('✓ panel ok — 5 scenarios')
