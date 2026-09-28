@@ -30,6 +30,8 @@ install: (i to focus, Enter installs, Esc closes)
 
 Only installed bundles show by default; `f` reveals the dsh-installation surfaces (web / headless / acp / sdk). Panel results are written into the session transcript via `channel.pushLocal` — they stay on screen instead of fading like notifications.
 
+**New-version detection**: opening the panel (or pressing `r`) checks installed plugins for newer versions and lights up `⬆new x.y.z` on the row — npm-installed plugins query the registry, git-installed ones query GitHub releases; only versions *newer* than the installed one are flagged, and results are cached for 10 minutes.
+
 ## Other commands (briefly)
 
 For one-shot use without the panel:
