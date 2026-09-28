@@ -6,9 +6,23 @@
 
 **Manage [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) plugins with one command.** · [中文](./README.md)
 
+Browse, install, remove, enable and disable plugins without leaving the terminal. Works with npm packages and GitHub-only plugins, with new-version detection built in.
+
+## Install
+
+```sh
+dsh plugin --profile dsh-tui add -w dsh-tui-pkg@latest
+```
+
+```sh
+dsh plugin --profile dsh-tui remove -w dsh-tui-pkg   # uninstall
+```
+
+Requires dsh-tui ≥ 0.9 (tested on 0.11.1) and Node `^22.19 || >=24`. **Restart dsh-tui afterwards** — `/reload` does not reload plugin code.
+
 ## The core: `/pkg`
 
-One command opens a full-screen panel that does everything — browse, install, remove, enable, disable:
+One command opens the full-screen panel:
 
 ```text
 /pkg
@@ -17,8 +31,8 @@ One command opens a full-screen panel that does everything — browse, install, 
 ```text
 bundles (3/12, installed only) Enter=toggle · ↑↓ move · d remove · i install · r refresh · f filter · Esc close
 ☑ dsh-tui 0.11.1        | on · 1 row · dep · read-only
-☑ dsh-tui-find 0.4.4    | on · 1 row · dep · removable
-☑ dsh-tui-pkg 0.3.3     | on · 1 row · dep · removable
+☑ dsh-tui-find 0.4.4    | on · 1 row · dep · removable  ⬆new 0.5.0
+☑ dsh-tui-pkg 0.4.3     | on · 1 row · dep · removable
 install: (i to focus, Enter installs, Esc closes)
 ```
 
@@ -28,7 +42,7 @@ install: (i to focus, Enter installs, Esc closes)
 | `↑↓` / `d` / `i` | move / remove selected / focus the install input (Enter installs) |
 | `r` / `f` / `Esc` | refresh / toggle view (installed ⇄ all) / close |
 
-Only installed bundles show by default; `f` reveals the dsh-installation surfaces (web / headless / acp / sdk). Panel results are written into the session transcript via `channel.pushLocal` — they stay on screen instead of fading like notifications.
+Only installed bundles show by default; `f` reveals the dsh-installation surfaces (web / headless / acp / sdk). Panel results are written into the session transcript, so they stay on screen instead of fading like notifications.
 
 **New-version detection**: opening the panel (or pressing `r`) checks installed plugins for newer versions and lights up `⬆new x.y.z` on the row — npm-installed plugins query the registry, git-installed ones query GitHub releases; only versions *newer* than the installed one are flagged, and results are cached for 10 minutes.
 
@@ -44,41 +58,9 @@ For one-shot use without the panel:
 | `/pkg remove\|on\|off <name>` | remove / enable / disable |
 | `/pkg web` | whether the browser surface is on and how to turn it on |
 
-Any first token that is not a known subcommand resolves against the inventory first (an installed name answers with its detail line), otherwise the whole input is an install spec — so `/pkg dsh-tui-theme@0.7.2` installs in one step. `show` / `install` aliases are still recognized for compatibility.
+Any first token that is not a known subcommand resolves against the inventory first (an installed name answers with its detail line), otherwise the whole input is an install spec — so `/pkg dsh-tui-theme@0.7.2` installs in one step.
 
-**GitHub-only plugins** (most of the community): just type the bare name. When npm has no such package, /pkg searches GitHub for matching repositories — a single exact match installs from the git spec and **registers the bundle automatically**; with several matches, the panel switches to a picker: ↑↓ to choose, Enter installs, Esc cancels (the text command opens the panel too).
-
-
-## Design notes (why it looks like this)
-
-- **One line per text result.** A command handler's text is rendered by the host as a notification capped at 200 cells and never enters the transcript; the panel exists precisely to get past that.
-- **No confirm dialogs.** `ctx.tuiDialogs` is a *mediated* capability: it requires the caller to be an admitted, non-root activation, and the dsh-tui 0.11.1 loader never runs admission for Loader-mounted plugins (measured: calls answer "cancelled" in ~0 ms). Typing an exact spec is the confirmation instead.
-- **One intentional `inject`.** `tuiScenes` is declared at entry level in `cordis.patch.yml` purely as an ordering guarantee — a scene must be registered from a live activation context, and a poll-timer callback does not carry one (`tuiScenes.register requires a live Cordis activation context` otherwise). Everything else is soft-probed with `ctx.get(name, false)`.
-- **Zero side effects.** No subprocesses, no file writes outside the profile: all operations delegate to the dsh plugin manager (`ctx.pluginManager`, the official pnpm path with automatic `dsh.profile.bundles` reconciliation and rollback).
-
-## Development
-
-```sh
-node test/smoke.mjs     # offline smoke tests against a fake host
-node --check lib/index.js
-npm pack
-```
-
-```
-lib/index.js            the whole implementation (pure ESM, zero runtime deps, no build step)
-cordis.patch.yml        profile mount layer
-dsh-plugin.json         community manifest (community-draft 0.15, permissions complete)
-test/smoke.mjs          offline smoke tests
-```
-
-### Boot self-test
-
-```sh
-$env:DSH_TUI_PKG_SELFTEST="C:\tmp\pkg-selftest.log"
-dsh --profile dsh-tui    # start, then exit
-```
-
-Records the registration route, whether the five host seams are mounted, the real `listBundles()` count, a real `/pkg status` run, the first leg of a one-click install against the real registry, and the availability of the scene/status/toast/dialog seams.
+**GitHub-only plugins** (most of the community): just type the bare name. When npm has no such package, `/pkg` searches GitHub for matching repositories — a single exact match installs from the git spec and **registers the bundle automatically**; with several matches, the panel switches to a picker: `↑↓` to choose, Enter installs, Esc cancels (the text command opens the panel too).
 
 ## License
 
