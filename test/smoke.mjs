@@ -528,6 +528,13 @@ const assertShort = (result) => {
   assert.equal(hints.has('dsh-tui-theme'), false)
   assert.equal(hints.has('@deepseek-ai/dsh-web-app'), false, 'installation-supplied surfaces are not flagged')
   overrideUpdatesFetcher(async () => undefined)
+
+  // A registry version that is NOT newer than the installed one never hints —
+  // this is the plugin's own situation (local 0.4.x, registry 0.3.5).
+  overrideUpdatesFetcher(async (packageName) => (packageName === 'dsh-tui-pkg' ? '0.3.5' : undefined))
+  const stale = await checkUpdates([{ name: 'dsh-tui-pkg', version: '0.4.2', installed: true }])
+  assert.equal(stale.has('dsh-tui-pkg'), false, 'an older registry version is not a hint')
+  overrideUpdatesFetcher(async () => undefined)
 }
 
 assert.ok(toasts.length > 0, 'toasts were emitted')
