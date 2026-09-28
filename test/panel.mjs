@@ -7,7 +7,10 @@
  */
 
 import assert from 'node:assert/strict'
-import { panelComponent } from '../lib/index.js'
+import { overrideGithubSearch, panelComponent } from '../lib/index.js'
+
+// Keep the panel tests offline: the GitHub fallback must not hit the network.
+overrideGithubSearch(async () => [])
 
 // ── fake manager: a mutable inventory + recorded calls ────────────────────
 
@@ -21,6 +24,10 @@ function fakeManager() {
   const change = (target, enabled) => ({ changed: true, application: enabled === undefined ? 'restart-required' : 'applied', stage: 'x', target, enabled })
   return {
     calls,
+    async inspect(spec) {
+      calls.push(['inspect', spec])
+      return { status: 'ok', name: spec.split('@')[0], version: '1.0.0' }
+    },
     async listBundles() {
       calls.push(['listBundles'])
       return rows.map((row) => ({ ...row }))

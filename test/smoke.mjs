@@ -12,10 +12,16 @@
  */
 
 import assert from 'node:assert/strict'
-import { readFileSync, rmSync } from 'node:fs'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { apply, filterBundles, name, inject } from '../lib/index.js'
+import { apply, ensureInBundles, filterBundles, name, inject, overrideGithubSearch, resolveInstallSpec } from '../lib/index.js'
+
+// Keep the whole suite offline: the GitHub fallback's network search is
+// replaced by a no-op that finds nothing (scenarios that need candidates
+// inject their own search inline).
+overrideGithubSearch(async () => [])
+
 
 /** The host renders a handler's text as a notification capped at 200 cells. */
 const NOTIFICATION_CELLS = 200
@@ -444,5 +450,61 @@ const assertShort = (result) => {
   }
 }
 
+// ── GitHub fallback for npm-less plugins ──────────────────────────────────
+{
+  // A single matching repository resolves onto a github: spec.
+  overrideGithubSearch(async () => ['Easyhoov/dsh-tui-feishu'])
+  const single = await resolveInstallSpec(manager, 'dsh-tui-feishu', { status: 'refused', problem: 'not-found', reason: 'not-found (registry 404)' })
+  assert.equal(single.spec, 'github:Easyhoov/dsh-tui-feishu')
+  assert.equal(single.via, 'github')
+  assert.equal(single.name, 'dsh-tui-feishu')
+
+  // Several candidates refuse with a list instead of guessing.
+  overrideGithubSearch(async () => ['a/dsh-tui-feishu', 'b/dsh-tui-feishu'])
+  const multi = await resolveInstallSpec(manager, 'dsh-tui-feishu', { status: 'refused', problem: 'not-found', reason: 'not-found (registry 404)' })
+  assert.match(multi.problem, /github:a\/dsh-tui-feishu/)
+  assert.match(multi.problem, /github:b\/dsh-tui-feishu/)
+
+  // Refusals that are not plain not-found stay untouched.
+  overrideGithubSearch(async () => ['x/y'])
+  const other = await resolveInstallSpec(manager, 'dsh-tui-feishu', { status: 'refused', problem: 'not-a-bundle', reason: 'no dsh.bundle.patch' })
+  assert.match(other.problem, /没有 dsh bundle 补丁/)
+  assert.equal(other.spec, undefined)
+
+  overrideGithubSearch(async () => [])
+}
+
+// ── bundle registration for git-hosted installs ───────────────────────────
+{
+  const home = join(tmpdir(), `dsh-tui-pkg-smoke-${Date.now()}`)
+  const profileDir = join(home, 'profiles', 'probe')
+  mkdirSync(join(profileDir, 'node_modules', 'dsh-tui-feishu'), { recursive: true })
+  const manifestPath = join(profileDir, 'package.json')
+  writeFileSync(
+    join(profileDir, 'node_modules', 'dsh-tui-feishu', 'package.json'),
+    JSON.stringify({ name: 'dsh-tui-feishu', version: '0.10.1', dsh: { bundle: { patch: './cordis.patch.yml' } } }),
+  )
+  writeFileSync(manifestPath, JSON.stringify({ dsh: { profile: { bundles: ['dsh-base', 'dsh-tui'] } } }))
+
+  const before = process.env.DSH_HOME
+  const beforeProfile = process.env.DSH_PROFILE
+  process.env.DSH_HOME = home
+  process.env.DSH_PROFILE = 'probe'
+  try {
+    assert.equal(ensureInBundles('dsh-tui-feishu'), 'bundled')
+    assert.deepEqual(JSON.parse(readFileSync(manifestPath, 'utf8')).dsh.profile.bundles, ['dsh-base', 'dsh-tui', 'dsh-tui-feishu'])
+    assert.equal(ensureInBundles('dsh-tui-feishu'), 'already')
+    // A package without a bundle patch must not be registered.
+    assert.equal(ensureInBundles('no-such-package'), 'skipped')
+  } finally {
+    if (before === undefined) delete process.env.DSH_HOME
+    else process.env.DSH_HOME = before
+    if (beforeProfile === undefined) delete process.env.DSH_PROFILE
+    else process.env.DSH_PROFILE = beforeProfile
+    rmSync(home, { recursive: true, force: true })
+  }
+}
+
 assert.ok(toasts.length > 0, 'toasts were emitted')
 console.log(`✓ smoke ok — ${manager.calls.length} manager calls, ${toasts.length} toasts`)
+

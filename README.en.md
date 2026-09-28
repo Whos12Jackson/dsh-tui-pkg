@@ -44,6 +44,8 @@ For one-shot use without the panel:
 
 Any first token that is not a known subcommand resolves against the inventory first (an installed name answers with its detail line), otherwise the whole input is an install spec — so `/pkg dsh-tui-theme@0.7.2` installs in one step. `show` / `install` aliases are still recognized for compatibility.
 
+**GitHub-only plugins** (most of the community): just type the bare name. When npm has no such package, /pkg searches GitHub for matching repositories — a single exact match installs from the git spec and **registers the bundle automatically**; several matches are listed for you to pick.
+
 
 ## Design notes (why it looks like this)
 
