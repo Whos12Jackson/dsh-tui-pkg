@@ -35,5 +35,8 @@
     ]
   },
   "subscriptions": [],
-  "license": "MIT"
+  "license": "MIT",
+  "source": {
+    "repository": "https://github.com/Whos12Jackson/dsh-tui-pkg"
+  }
 }

@@ -12,6 +12,15 @@
     "tui"
   ],
   "license": "MIT",
+  "author": "Whos12Jackson",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Whos12Jackson/dsh-tui-pkg.git"
+  },
+  "homepage": "https://github.com/Whos12Jackson/dsh-tui-pkg#readme",
+  "bugs": {
+    "url": "https://github.com/Whos12Jackson/dsh-tui-pkg/issues"
+  },
   "type": "module",
   "main": "lib/index.js",
   "exports": {
